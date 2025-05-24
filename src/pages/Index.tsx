@@ -9,7 +9,11 @@ const Index = () => {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <QrCode className="w-12 h-12 text-indigo-600" />
+            <img 
+              src="/lovable-uploads/788d5288-fd6e-4356-9cf7-4fe6d075b7a3.png" 
+              alt="NoWhile Logo" 
+              className="w-12 h-12"
+            />
             <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Advanced QR Code Generator
             </h1>
@@ -51,10 +55,16 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Hidden Lovable Badge */}
+      <div id="lovable-badge" style={{ display: 'none' }}></div>
+
       {/* Footer */}
       <footer className="mt-20 text-center py-8 border-t border-white/20">
-        <p className="text-gray-600 text-lg">
+        <p className="text-gray-600 text-lg mb-2">
           Made with ❤️ by <span className="font-semibold text-indigo-600">Ansh</span>
+        </p>
+        <p className="text-gray-500 text-sm">
+          © 2024 nowhile.com - All rights reserved
         </p>
       </footer>
     </div>

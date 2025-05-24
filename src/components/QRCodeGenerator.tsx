@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -462,137 +461,132 @@ END:VEVENT`;
           {/* Dynamic Fields Based on QR Type */}
           {renderQRTypeFields()}
 
-          {/* Color Presets */}
+          {/* Compact Color Presets */}
           <div className="space-y-3">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Palette className="w-4 h-4" />
-              Color Presets
+              Quick Color Presets
             </Label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-6 gap-2">
               {colorPresets.map((preset) => (
-                <Button
+                <button
                   key={preset.name}
-                  variant="outline"
-                  size="sm"
                   onClick={() => {
                     setForegroundColor(preset.fg);
                     setBackgroundColor(preset.bg);
                   }}
-                  className="h-auto p-3 flex flex-col items-center gap-1 hover:scale-105 transition-transform"
+                  className="group relative w-full h-10 rounded border border-gray-200 hover:border-gray-400 transition-all duration-200 overflow-hidden"
+                  title={preset.name}
                 >
                   <div
-                    className="w-6 h-6 rounded border border-gray-200"
+                    className="w-full h-full"
                     style={{
                       background: `linear-gradient(45deg, ${preset.bg} 50%, ${preset.fg} 50%)`,
                     }}
                   />
-                  <span className="text-xs">{preset.name}</span>
-                </Button>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Custom Colors */}
+          {/* Custom Colors - More Compact */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="foreground" className="text-sm font-medium">
-                Foreground Color
-              </Label>
+              <Label htmlFor="foreground" className="text-sm font-medium">Foreground</Label>
               <div className="flex gap-2">
                 <Input
                   id="foreground"
                   type="color"
                   value={foregroundColor}
                   onChange={(e) => setForegroundColor(e.target.value)}
-                  className="w-16 h-10 p-1 border rounded cursor-pointer"
+                  className="w-12 h-10 p-1 border rounded cursor-pointer"
                 />
                 <Input
                   value={foregroundColor}
                   onChange={(e) => setForegroundColor(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 text-xs"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="background" className="text-sm font-medium">
-                Background Color
-              </Label>
+              <Label htmlFor="background" className="text-sm font-medium">Background</Label>
               <div className="flex gap-2">
                 <Input
                   id="background"
                   type="color"
                   value={backgroundColor}
                   onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="w-16 h-10 p-1 border rounded cursor-pointer"
+                  className="w-12 h-10 p-1 border rounded cursor-pointer"
                 />
                 <Input
                   value={backgroundColor}
                   onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 text-xs"
                 />
               </div>
             </div>
           </div>
 
-          {/* Size Slider */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">
-              Size: {size[0]}px
-            </Label>
-            <Slider
-              value={size}
-              onValueChange={setSize}
-              max={800}
-              min={200}
-              step={50}
-              className="w-full"
-            />
+          {/* Compact Settings Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Size Slider */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Size: {size[0]}px</Label>
+              <Slider
+                value={size}
+                onValueChange={setSize}
+                max={800}
+                min={200}
+                step={50}
+                className="w-full"
+              />
+            </div>
+
+            {/* Margin Slider */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Margin: {margin[0]}</Label>
+              <Slider
+                value={margin}
+                onValueChange={setMargin}
+                max={10}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+            </div>
           </div>
 
-          {/* Margin Slider */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">
-              Margin: {margin[0]} units
-            </Label>
-            <Slider
-              value={margin}
-              onValueChange={setMargin}
-              max={10}
-              min={1}
-              step={1}
-              className="w-full"
-            />
-          </div>
+          {/* Error Correction & Format */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Error Correction</Label>
+              <Select value={errorLevel} onValueChange={setErrorLevel}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="L">Low (7%)</SelectItem>
+                  <SelectItem value="M">Medium (15%)</SelectItem>
+                  <SelectItem value="Q">Quartile (25%)</SelectItem>
+                  <SelectItem value="H">High (30%)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Error Correction Level */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Error Correction Level</Label>
-            <Select value={errorLevel} onValueChange={setErrorLevel}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="L">Low (7%)</SelectItem>
-                <SelectItem value="M">Medium (15%)</SelectItem>
-                <SelectItem value="Q">Quartile (25%)</SelectItem>
-                <SelectItem value="H">High (30%)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Download Format */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Download Format</Label>
-            <Select value={format} onValueChange={setFormat}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="png">PNG</SelectItem>
-                <SelectItem value="jpg">JPG</SelectItem>
-                <SelectItem value="svg">SVG</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Format</Label>
+              <Select value={format} onValueChange={setFormat}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="png">PNG</SelectItem>
+                  <SelectItem value="jpg">JPG</SelectItem>
+                  <SelectItem value="svg">SVG</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
