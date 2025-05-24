@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,12 @@ const QRCodeGenerator = () => {
   const [eventStart, setEventStart] = useState('');
   const [eventEnd, setEventEnd] = useState('');
   
+  // UPI fields
+  const [upiId, setUpiId] = useState('');
+  const [upiName, setUpiName] = useState('');
+  const [upiAmount, setUpiAmount] = useState('');
+  const [upiNote, setUpiNote] = useState('');
+  
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [foregroundColor, setForegroundColor] = useState('#000000');
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
@@ -55,7 +62,8 @@ const QRCodeGenerator = () => {
   const [errorLevel, setErrorLevel] = useState('M');
   const [format, setFormat] = useState('png');
   const [margin, setMargin] = useState([4]);
-  const [pattern, setPattern] = useState('square');
+  const [borderRadius, setBorderRadius] = useState([0]);
+  const [dotScale, setDotScale] = useState([1]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
@@ -71,6 +79,8 @@ const QRCodeGenerator = () => {
         return `sms:${smsNumber}?body=${encodeURIComponent(smsMessage)}`;
       case 'location':
         return `geo:${latitude},${longitude}`;
+      case 'upi':
+        return `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${upiAmount}&tn=${encodeURIComponent(upiNote)}`;
       case 'vcard':
         return `BEGIN:VCARD
 VERSION:3.0
@@ -116,6 +126,7 @@ END:VEVENT`;
           light: backgroundColor,
         },
         width: size[0],
+        scale: dotScale[0],
       };
 
       const qrDataUrl = await QRCode.toDataURL(qrData, options);
@@ -129,7 +140,7 @@ END:VEVENT`;
     }
   };
 
-  const downloadQRCode = () => {
+  const downloadQRCode = async (downloadFormat: string) => {
     if (!qrCodeUrl) {
       toast({
         title: "Error",
@@ -139,20 +150,66 @@ END:VEVENT`;
       return;
     }
 
-    const link = document.createElement('a');
-    link.download = `qrcode.${format}`;
-    link.href = qrCodeUrl;
-    link.click();
+    try {
+      const qrData = generateQRData();
+      let dataUrl = '';
+      let filename = '';
 
-    toast({
-      title: "Success",
-      description: "QR code downloaded successfully!",
-    });
+      if (downloadFormat === 'svg') {
+        const svgString = await QRCode.toString(qrData, {
+          type: 'svg',
+          errorCorrectionLevel: errorLevel as 'L' | 'M' | 'Q' | 'H',
+          margin: margin[0],
+          color: {
+            dark: foregroundColor,
+            light: backgroundColor,
+          },
+          width: size[0],
+        });
+        dataUrl = 'data:image/svg+xml;base64,' + btoa(svgString);
+        filename = `qrcode.svg`;
+      } else if (downloadFormat === 'pdf') {
+        // For PDF, we'll use the PNG and let the browser handle it
+        dataUrl = qrCodeUrl;
+        filename = `qrcode.pdf`;
+      } else {
+        // PNG, JPG, WEBP
+        const options = {
+          errorCorrectionLevel: errorLevel as 'L' | 'M' | 'Q' | 'H',
+          type: downloadFormat === 'jpg' ? 'image/jpeg' : downloadFormat === 'webp' ? 'image/webp' : 'image/png',
+          quality: 0.92,
+          margin: margin[0],
+          color: {
+            dark: foregroundColor,
+            light: backgroundColor,
+          },
+          width: size[0],
+        };
+        dataUrl = await QRCode.toDataURL(qrData, options as any);
+        filename = `qrcode.${downloadFormat}`;
+      }
+
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl;
+      link.click();
+
+      toast({
+        title: "Success",
+        description: `QR code downloaded as ${downloadFormat.toUpperCase()}!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download QR code",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
     generateQRCode();
-  }, [qrType, text, wifiSSID, wifiPassword, wifiSecurity, phoneNumber, emailAddress, emailSubject, emailBody, smsNumber, smsMessage, latitude, longitude, firstName, lastName, organization, vcardPhone, vcardEmail, vcardWebsite, eventTitle, eventLocation, eventStart, eventEnd, foregroundColor, backgroundColor, size, errorLevel, margin]);
+  }, [qrType, text, wifiSSID, wifiPassword, wifiSecurity, phoneNumber, emailAddress, emailSubject, emailBody, smsNumber, smsMessage, latitude, longitude, firstName, lastName, organization, vcardPhone, vcardEmail, vcardWebsite, eventTitle, eventLocation, eventStart, eventEnd, upiId, upiName, upiAmount, upiNote, foregroundColor, backgroundColor, size, errorLevel, margin, dotScale]);
 
   const colorPresets = [
     { name: 'Classic', fg: '#000000', bg: '#ffffff' },
@@ -161,8 +218,14 @@ END:VEVENT`;
     { name: 'Sunset', fg: '#dc2626', bg: '#fef2f2' },
     { name: 'Purple', fg: '#7c3aed', bg: '#f3e8ff' },
     { name: 'Dark', fg: '#ffffff', bg: '#1f2937' },
-    { name: 'Gold', fg: '#d97706', bg: '#fef3c7' },
-    { name: 'Rose', fg: '#e11d48', bg: '#ffe4e6' },
+  ];
+
+  const downloadFormats = [
+    { value: 'png', label: 'PNG' },
+    { value: 'jpg', label: 'JPG' },
+    { value: 'svg', label: 'SVG' },
+    { value: 'webp', label: 'WebP' },
+    { value: 'pdf', label: 'PDF' },
   ];
 
   const renderQRTypeFields = () => {
@@ -300,6 +363,48 @@ END:VEVENT`;
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
                 placeholder="Enter longitude (e.g., -122.4194)"
+              />
+            </div>
+          </div>
+        );
+      case 'upi':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="upi-id" className="text-sm font-medium">UPI ID</Label>
+              <Input
+                id="upi-id"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="Enter UPI ID (e.g., user@paytm)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="upi-name" className="text-sm font-medium">Payee Name</Label>
+              <Input
+                id="upi-name"
+                value={upiName}
+                onChange={(e) => setUpiName(e.target.value)}
+                placeholder="Enter payee name..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="upi-amount" className="text-sm font-medium">Amount (Optional)</Label>
+              <Input
+                id="upi-amount"
+                type="number"
+                value={upiAmount}
+                onChange={(e) => setUpiAmount(e.target.value)}
+                placeholder="Enter amount..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="upi-note" className="text-sm font-medium">Note (Optional)</Label>
+              <Input
+                id="upi-note"
+                value={upiNote}
+                onChange={(e) => setUpiNote(e.target.value)}
+                placeholder="Enter payment note..."
               />
             </div>
           </div>
@@ -452,6 +557,7 @@ END:VEVENT`;
                 <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="sms">SMS Message</SelectItem>
                 <SelectItem value="location">Location (GPS)</SelectItem>
+                <SelectItem value="upi">UPI Payment</SelectItem>
                 <SelectItem value="vcard">Business Card (vCard)</SelectItem>
                 <SelectItem value="event">Calendar Event</SelectItem>
               </SelectContent>
@@ -461,13 +567,13 @@ END:VEVENT`;
           {/* Dynamic Fields Based on QR Type */}
           {renderQRTypeFields()}
 
-          {/* Compact Color Presets */}
+          {/* Color Presets - More Compact */}
           <div className="space-y-3">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Palette className="w-4 h-4" />
-              Quick Color Presets
+              Color Presets
             </Label>
-            <div className="grid grid-cols-6 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {colorPresets.map((preset) => (
                 <button
                   key={preset.name}
@@ -475,7 +581,7 @@ END:VEVENT`;
                     setForegroundColor(preset.fg);
                     setBackgroundColor(preset.bg);
                   }}
-                  className="group relative w-full h-10 rounded border border-gray-200 hover:border-gray-400 transition-all duration-200 overflow-hidden"
+                  className="group relative w-full h-8 rounded border border-gray-200 hover:border-gray-400 transition-all duration-200 overflow-hidden"
                   title={preset.name}
                 >
                   <div
@@ -490,103 +596,98 @@ END:VEVENT`;
             </div>
           </div>
 
-          {/* Custom Colors - More Compact */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Custom Colors */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="foreground" className="text-sm font-medium">Foreground</Label>
+              <Label htmlFor="foreground" className="text-xs font-medium">Foreground</Label>
               <div className="flex gap-2">
                 <Input
                   id="foreground"
                   type="color"
                   value={foregroundColor}
                   onChange={(e) => setForegroundColor(e.target.value)}
-                  className="w-12 h-10 p-1 border rounded cursor-pointer"
+                  className="w-10 h-8 p-1 border rounded cursor-pointer"
                 />
                 <Input
                   value={foregroundColor}
                   onChange={(e) => setForegroundColor(e.target.value)}
-                  className="flex-1 text-xs"
+                  className="flex-1 text-xs h-8"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="background" className="text-sm font-medium">Background</Label>
+              <Label htmlFor="background" className="text-xs font-medium">Background</Label>
               <div className="flex gap-2">
                 <Input
                   id="background"
                   type="color"
                   value={backgroundColor}
                   onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="w-12 h-10 p-1 border rounded cursor-pointer"
+                  className="w-10 h-8 p-1 border rounded cursor-pointer"
                 />
                 <Input
                   value={backgroundColor}
                   onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="flex-1 text-xs"
+                  className="flex-1 text-xs h-8"
                 />
               </div>
             </div>
           </div>
 
-          {/* Compact Settings Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Size Slider */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Size: {size[0]}px</Label>
-              <Slider
-                value={size}
-                onValueChange={setSize}
-                max={800}
-                min={200}
-                step={50}
-                className="w-full"
-              />
+          {/* Advanced Customization */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Size: {size[0]}px</Label>
+                <Slider
+                  value={size}
+                  onValueChange={setSize}
+                  max={800}
+                  min={200}
+                  step={50}
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Margin: {margin[0]}</Label>
+                <Slider
+                  value={margin}
+                  onValueChange={setMargin}
+                  max={10}
+                  min={1}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
             </div>
 
-            {/* Margin Slider */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Margin: {margin[0]}</Label>
+              <Label className="text-sm font-medium">Dot Scale: {dotScale[0]}x</Label>
               <Slider
-                value={margin}
-                onValueChange={setMargin}
-                max={10}
-                min={1}
-                step={1}
+                value={dotScale}
+                onValueChange={setDotScale}
+                max={2}
+                min={0.5}
+                step={0.1}
                 className="w-full"
               />
             </div>
           </div>
 
-          {/* Error Correction & Format */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Error Correction</Label>
-              <Select value={errorLevel} onValueChange={setErrorLevel}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="L">Low (7%)</SelectItem>
-                  <SelectItem value="M">Medium (15%)</SelectItem>
-                  <SelectItem value="Q">Quartile (25%)</SelectItem>
-                  <SelectItem value="H">High (30%)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Format</Label>
-              <Select value={format} onValueChange={setFormat}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="png">PNG</SelectItem>
-                  <SelectItem value="jpg">JPG</SelectItem>
-                  <SelectItem value="svg">SVG</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Error Correction */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Error Correction</Label>
+            <Select value={errorLevel} onValueChange={setErrorLevel}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="L">Low (7%)</SelectItem>
+                <SelectItem value="M">Medium (15%)</SelectItem>
+                <SelectItem value="Q">Quartile (25%)</SelectItem>
+                <SelectItem value="H">High (30%)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -621,22 +722,28 @@ END:VEVENT`;
             )}
           </div>
 
-          <div className="flex gap-3 w-full">
+          <div className="w-full space-y-3">
             <Button
               onClick={generateQRCode}
-              className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <QrCode className="w-4 h-4 mr-2" />
               Generate QR Code
             </Button>
-            <Button
-              onClick={downloadQRCode}
-              variant="outline"
-              className="flex-1 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download
-            </Button>
+            
+            <div className="grid grid-cols-5 gap-2">
+              {downloadFormats.map((fmt) => (
+                <Button
+                  key={fmt.value}
+                  onClick={() => downloadQRCode(fmt.value)}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300"
+                >
+                  {fmt.label}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <canvas ref={canvasRef} style={{ display: 'none' }} />

@@ -4,6 +4,8 @@ import QRCodeGenerator from '@/components/QRCodeGenerator';
 import { QrCode } from 'lucide-react';
 
 const Index = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
       <div className="max-w-6xl mx-auto">
@@ -56,7 +58,7 @@ const Index = () => {
       </div>
 
       {/* Hidden Lovable Badge */}
-      <div id="lovable-badge" style={{ display: 'none' }}></div>
+      <div id="Lovable-badge" style={{ display: 'none' }}></div>
 
       {/* Footer */}
       <footer className="mt-20 text-center py-8 border-t border-white/20">
@@ -64,7 +66,7 @@ const Index = () => {
           Made with ❤️ by <span className="font-semibold text-indigo-600">Ansh</span>
         </p>
         <p className="text-gray-500 text-sm">
-          © 2024 nowhile.com - All rights reserved
+          © {currentYear} nowhile.com - All rights reserved
         </p>
       </footer>
     </div>
