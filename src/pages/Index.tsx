@@ -57,9 +57,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Hidden Lovable Badge */}
-      <div id="lovable-badge" style={{ display: 'none' }}></div>
-
       {/* Footer */}
       <footer className="mt-20 text-center py-8 border-t border-white/20">
         <p className="text-gray-600 text-lg mb-2">
