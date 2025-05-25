@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const QRCodeGenerator = () => {
   const [qrType, setQrType] = useState('text');
-  const [text, setText] = useState('https://lovable.dev');
+  const [text, setText] = useState('https://nowhile.com');
   
   // WiFi fields
   const [wifiSSID, setWifiSSID] = useState('');
@@ -514,6 +513,7 @@ END:VEVENT`;
             </div>
           </div>
         );
+      case 'text':
       default:
         return (
           <div className="space-y-2">

@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import Layout from '@/components/shared/Layout';
 
 const FAQ = () => {
   const [openItems, setOpenItems] = useState<number[]>([]);
@@ -78,60 +78,58 @@ const FAQ = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <Link to="/" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Generator
-          </Link>
-          
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              Frequently Asked Questions
-            </h1>
-            <p className="text-gray-600 text-lg">Everything you need to know about our QR code generator</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <div key={index} className="bg-white/60 backdrop-blur-sm rounded-lg border-0 overflow-hidden">
-              <button
-                onClick={() => toggleItem(index)}
-                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-white/40 transition-colors"
-              >
-                <h3 className="text-lg font-semibold text-gray-800 pr-4">{faq.question}</h3>
-                {openItems.includes(index) ? (
-                  <ChevronUp className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-                )}
-              </button>
-              
-              {openItems.includes(index) && (
-                <div className="px-6 pb-4">
-                  <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-12 text-center bg-white/60 backdrop-blur-sm rounded-lg p-8 border-0">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Still have questions?</h2>
-          <p className="text-gray-600 mb-6">
-            Can't find the answer you're looking for? Feel free to reach out to our support team.
-          </p>
-          <Link 
-            to="/contact" 
-            className="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-          >
-            Contact Support
-          </Link>
+    <Layout>
+      <div className="mb-8">
+        <Link to="/" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 mb-6">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Generator
+        </Link>
+        
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            Frequently Asked Questions
+          </h1>
+          <p className="text-gray-600 text-lg">Everything you need to know about our QR code generator</p>
         </div>
       </div>
-    </div>
+
+      <div className="space-y-4">
+        {faqs.map((faq, index) => (
+          <div key={index} className="bg-white/60 backdrop-blur-sm rounded-lg border-0 overflow-hidden">
+            <button
+              onClick={() => toggleItem(index)}
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-white/40 transition-colors"
+            >
+              <h3 className="text-lg font-semibold text-gray-800 pr-4">{faq.question}</h3>
+              {openItems.includes(index) ? (
+                <ChevronUp className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+              )}
+            </button>
+            
+            {openItems.includes(index) && (
+              <div className="px-6 pb-4">
+                <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-12 text-center bg-white/60 backdrop-blur-sm rounded-lg p-8 border-0">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Still have questions?</h2>
+        <p className="text-gray-600 mb-6">
+          Can't find the answer you're looking for? Feel free to reach out to our support team.
+        </p>
+        <Link 
+          to="/contact" 
+          className="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+        >
+          Contact Support
+        </Link>
+      </div>
+    </Layout>
   );
 };
 
